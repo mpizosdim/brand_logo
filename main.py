@@ -177,12 +177,16 @@ class DCGan(object):
 
                 generated_images = self.generator.predict(text_batch)
                 self.discriminator.trainable = True
-                d_loss, d_accuracy = self.discriminator.train_on_batch([np.concatenate((image_batch, generated_images)), np.concatenate((text_batch, text_batch))], np.array([1] * batch_size + [0] * batch_size))
+                d_loss_real, d_accuracy_real = self.discriminator.train_on_batch([image_batch, text_batch], np.array([1] * batch_size))
+                d_loss_fake, d_accuracy_fake = self.discriminator.train_on_batch([generated_images, text_batch], np.array([0] * batch_size))
+                d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+                d_accuracy = 0.5 * np.add(d_accuracy_real, d_accuracy_fake)
                 d_losses.append(d_loss)
+                d_accuracies.append(d_accuracy)
+
                 self.discriminator.trainable = False
                 g_loss = self.model.train_on_batch(text_batch, np.array([1] * batch_size))
                 g_losses.append(g_loss)
-                d_accuracies.append(d_accuracy)
 
             d_losses_all.append(np.mean(d_losses))
             g_losses_all.append(np.mean(g_losses))
