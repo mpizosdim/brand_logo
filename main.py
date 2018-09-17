@@ -175,9 +175,10 @@ class DCGan(object):
             print("Epoch %d g_loss : %f" % (epoch, np.mean(g_losses)))
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
-                    self.generate_image_from_text(name).show()
-                    if self.save_images_path:
-                        self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
+                    if epoch % 10 == 0:
+                        self.generate_image_from_text(name).show()
+                        if self.save_images_path:
+                            self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
 
     def generate_image_from_text(self, text):
         encoded_text = np.zeros(shape=(1, self.biggest_sentence, self.vocab_size))
@@ -196,7 +197,7 @@ if __name__ == '__main__':
     gan = DCGan()
     gan.preprocess("labeled_data/", img_width, img_height)
     gan.build_model()
-    gan.set_testing_data(["prada", "ajk", "carrel", "mun"])
+    gan.set_testing_data(["prada", "ajk", "carrel", "mun"], "test_folder/")
     gan.fit(epochs, batch_size)
 
 
