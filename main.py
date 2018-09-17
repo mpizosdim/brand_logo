@@ -12,6 +12,7 @@ from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import SGD
 from PIL import Image
+import matplotlib.pyplot as plt
 
 class DCGan(object):
     def __init__(self):
@@ -130,16 +131,24 @@ class DCGan(object):
         self.generator.compile(loss='mean_squared_error', optimizer=optimizer)
         print('generator: ', self.generator.summary())
 
+        # ==== discriminator generator ====
         self.discriminator.trainable = False
         model_output = self.discriminator([self.generator.output, input_layer_text])
         self.model = Model(input_layer_text, model_output)
-
         g_optim = SGD(lr=0.0005, momentum=0.9, nesterov=True)
         self.model.compile(loss='binary_crossentropy', optimizer=g_optim)
-
         print('generator-discriminator: ', self.model.summary())
 
+    def _plot_loss(self, lose_d, lose_g):
+        epochs = np.arange(len(lose_d))
+        plt.plot(epochs, lose_d, 'r', epochs, lose_g, 'b')
+        plt.xlabel("epochs")
+        plt.ylabel("loss")
+        plt.show()
+
     def fit(self, epochs, batch_size):
+        d_losses_all = []
+        g_losses_all = []
         for epoch in range(epochs):
             d_losses = []
             g_losses = []
@@ -168,14 +177,19 @@ class DCGan(object):
                 g_loss = self.model.train_on_batch(text_batch, np.array([1] * batch_size))
                 g_losses.append(g_loss)
 
+            d_losses_all.append(np.mean(d_losses))
+            g_losses_all.append(np.mean(g_losses))
+
             print("d_loss : %f" % np.mean(d_losses))
             print("g_loss : %f" % np.mean(g_losses))
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
-                    if epoch % 10 == 0:
+                    if epoch % 100 == 0:
                         self.generate_image_from_text(name).show()
                         if self.save_images_path:
                             self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
+
+        self._plot_loss(d_losses_all, g_losses_all)
 
     def generate_image_from_text(self, text):
         encoded_text = np.zeros(shape=(1, self.biggest_sentence, self.vocab_size))
@@ -188,7 +202,7 @@ class DCGan(object):
 
 
 if __name__ == '__main__':
-    epochs = 10
+    epochs = 2
     batch_size = 32
     img_width, img_height = 160, 80
     gan = DCGan()
