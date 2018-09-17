@@ -11,8 +11,9 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import SGD
-#from PIL import Image
-from IPython.display import Image
+from PIL import Image
+from IPython.display import display
+from IPython.display import Image as ipy_image
 
 
 class DCGan(object):
@@ -70,9 +71,12 @@ class DCGan(object):
         self.vocab_size = vocab_size
         self.data = data
         self.biggest_sentence = biggest_sentence
+        self.save_images_path = None
         pass
 
-    def set_testing_data(self, names_to_be_tested):
+    def set_testing_data(self, names_to_be_tested, save_images_path=None):
+        if save_images_path:
+            self.save_images_path = save_images_path
         self.names_to_be_tested = names_to_be_tested
 
     def _build_generator(self, input_layer_text, lstm_hidden_size, init_img_width, init_img_height):
@@ -171,6 +175,8 @@ class DCGan(object):
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
                     self.generate_image_from_text(name).show()
+                    if self.save_images_path:
+                        self.generate_image_from_text(name).save(self.save_images_path + name + "_" + epoch + "png")
 
     def generate_image_from_text(self, text):
         encoded_text = np.zeros(shape=(1, self.biggest_sentence, self.vocab_size))
