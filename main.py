@@ -115,23 +115,22 @@ class DCGan(object):
         return Model([img_input2, input_layer_text], discriminator_output)
 
     def build_model(self, lstm_hidden_size=200, optimizer="SGD"):
-
-        init_img_width = self.img_width // 4
-        init_img_height = self.img_height // 4
-        input_layer_text = Input(shape=(self.biggest_sentence, self.vocab_size,))
-        self.generator = self._build_generator(input_layer_text, lstm_hidden_size, init_img_width, init_img_height)
-        self.generator.compile(loss='mean_squared_error', optimizer=optimizer)
-        print('generator: ', self.generator.summary())
-
+        # ==== build distriminator ====
         input_layer_text2 = Input(shape=(self.biggest_sentence, self.vocab_size,))
         self.discriminator = self._build_discriminator(input_layer_text2, lstm_hidden_size)
         d_optim = SGD(lr=0.0005, momentum=0.9, nesterov=True)
-        self.discriminator.compile(loss='binary_crossentropy', optimizer=d_optim)
-        print('generator-discriminator: ', self.discriminator.summary())
+        self.discriminator.compile(loss='binary_crossentropy', optimizer=d_optim, metrics=['accuracy'])
+        print('discriminator: ', self.discriminator.summary())
 
+        # ==== build generator ====
+        input_layer_text = Input(shape=(self.biggest_sentence, self.vocab_size,))
+        self.generator = self._build_generator(input_layer_text, lstm_hidden_size, self.img_width // 4, self.img_height // 4)
+        self.generator.compile(loss='mean_squared_error', optimizer=optimizer)
+        print('generator: ', self.generator.summary())
+
+        self.discriminator.trainable = False
         model_output = self.discriminator([self.generator.output, input_layer_text])
         self.model = Model(input_layer_text, model_output)
-        self.discriminator.trainable = False
 
         g_optim = SGD(lr=0.0005, momentum=0.9, nesterov=True)
         self.model.compile(loss='binary_crossentropy', optimizer=g_optim)
