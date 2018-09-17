@@ -12,9 +12,6 @@ from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import SGD
 from PIL import Image
-from IPython.display import display
-from IPython.display import Image as ipy_image
-
 
 class DCGan(object):
     def __init__(self):
@@ -72,7 +69,6 @@ class DCGan(object):
         self.vocab_size = vocab_size
         self.data = data
         self.biggest_sentence = biggest_sentence
-
         pass
 
     def set_testing_data(self, names_to_be_tested, save_images_path=None):
@@ -147,6 +143,7 @@ class DCGan(object):
         for epoch in range(epochs):
             d_losses = []
             g_losses = []
+            print("====" * 6)
             print("epoch is: %s" % epoch)
             batch_count = int(self.data.shape[0] / batch_size)
             print("number of batches: %s" % batch_count)
@@ -171,8 +168,8 @@ class DCGan(object):
                 g_loss = self.model.train_on_batch(text_batch, np.array([1] * batch_size))
                 g_losses.append(g_loss)
 
-            print("Epoch %d d_loss : %f" % (epoch, np.mean(d_losses)))
-            print("Epoch %d g_loss : %f" % (epoch, np.mean(g_losses)))
+            print("d_loss : %f" % np.mean(d_losses))
+            print("g_loss : %f" % np.mean(g_losses))
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
                     if epoch % 10 == 0:
@@ -199,8 +196,3 @@ if __name__ == '__main__':
     gan.build_model()
     gan.set_testing_data(["prada", "ajk", "carrel", "mun"], "test_folder/")
     gan.fit(epochs, batch_size)
-
-
-
-
-
