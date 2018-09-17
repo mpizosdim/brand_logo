@@ -30,6 +30,7 @@ class DCGan(object):
         self.discriminator = None
         self.model = None
         self.names_to_be_tested = None
+        self.save_images_path = None
 
     @staticmethod
     def _word2ind_padded(word, dictionary, max_pad, vocab_size):
@@ -71,7 +72,7 @@ class DCGan(object):
         self.vocab_size = vocab_size
         self.data = data
         self.biggest_sentence = biggest_sentence
-        self.save_images_path = None
+
         pass
 
     def set_testing_data(self, names_to_be_tested, save_images_path=None):
