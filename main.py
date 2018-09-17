@@ -74,12 +74,8 @@ class DCGan(object):
     def set_testing_data(self, names_to_be_tested):
         self.names_to_be_tested = names_to_be_tested
 
-    def build_model(self, lstm_hidden_size=200):
+    def _build_generator(self, input_layer_text, lstm_hidden_size, init_img_width, init_img_height):
 
-        init_img_width = self.img_width // 4
-        init_img_height = self.img_height // 4
-
-        input_layer_text = Input(shape=(self.biggest_sentence, self.vocab_size,))
         lstm_layer = LSTM(lstm_hidden_size)(input_layer_text)
         text_layer = Dense(1024)(lstm_layer)
 
@@ -87,19 +83,18 @@ class DCGan(object):
         generator_layer = Dense(128 * init_img_width * init_img_height)(generator_layer)
         generator_layer = BatchNormalization()(generator_layer)
         generator_layer = Activation('tanh')(generator_layer)
-        generator_layer = Reshape((init_img_height, init_img_width, 128), input_shape=(128 * init_img_width * init_img_height,))(generator_layer)
+        generator_layer = Reshape((init_img_height, init_img_width, 128),
+                                  input_shape=(128 * init_img_width * init_img_height,))(generator_layer)
         generator_layer = UpSampling2D(size=(2, 2))(generator_layer)
         generator_layer = Conv2D(64, kernel_size=5, padding='same')(generator_layer)
         generator_layer = Activation('tanh')(generator_layer)
         generator_layer = UpSampling2D(size=(2, 2))(generator_layer)
         generator_layer = Conv2D(self.img_channels, kernel_size=5, padding='same')(generator_layer)
         generator_output = Activation('tanh')(generator_layer)
-        self.generator = Model(input_layer_text, generator_output)
-        self.generator.compile(loss='mean_squared_error', optimizer="SGD")
-        print('generator: ', self.generator.summary())
+        return Model(input_layer_text, generator_output)
 
-        input_layer_text2 = Input(shape=(self.biggest_sentence, self.vocab_size,))
-        lstm_layer2 = LSTM(lstm_hidden_size)(input_layer_text2)
+    def _build_discriminator(self, input_layer_text, lstm_hidden_size):
+        lstm_layer2 = LSTM(lstm_hidden_size)(input_layer_text)
         text_layer2 = Dense(1024)(lstm_layer2)
 
         img_input2 = Input(shape=(self.img_height, self.img_width, self.img_channels,))
@@ -117,13 +112,24 @@ class DCGan(object):
         discriminator_layer = Activation('tanh')(merged_layer)
         discriminator_layer = Dense(1)(discriminator_layer)
         discriminator_output = Activation('sigmoid')(discriminator_layer)
-        self.discriminator = Model([img_input2, input_layer_text2], discriminator_output)
+        return Model([img_input2, input_layer_text], discriminator_output)
+
+    def build_model(self, lstm_hidden_size=200, optimizer="SGD"):
+
+        init_img_width = self.img_width // 4
+        init_img_height = self.img_height // 4
+        input_layer_text = Input(shape=(self.biggest_sentence, self.vocab_size,))
+        self.generator = self._build_generator(input_layer_text, lstm_hidden_size, init_img_width, init_img_height)
+        self.generator.compile(loss='mean_squared_error', optimizer=optimizer)
+        print('generator: ', self.generator.summary())
+
+        input_layer_text2 = Input(shape=(self.biggest_sentence, self.vocab_size,))
+        self.discriminator = self._build_discriminator(input_layer_text2, lstm_hidden_size)
         d_optim = SGD(lr=0.0005, momentum=0.9, nesterov=True)
         self.discriminator.compile(loss='binary_crossentropy', optimizer=d_optim)
         print('generator-discriminator: ', self.discriminator.summary())
 
         model_output = self.discriminator([self.generator.output, input_layer_text])
-
         self.model = Model(input_layer_text, model_output)
         self.discriminator.trainable = False
 
@@ -133,7 +139,6 @@ class DCGan(object):
         print('generator-discriminator: ', self.model.summary())
 
     def fit(self, epochs, batch_size):
-
         for epoch in range(epochs):
             d_losses = []
             g_losses = []
