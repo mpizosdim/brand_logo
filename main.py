@@ -11,7 +11,8 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import SGD
-from PIL import Image
+#from PIL import Image
+from IPython.display import Image
 
 
 class DCGan(object):
