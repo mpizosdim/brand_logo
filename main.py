@@ -177,7 +177,7 @@ class DCGan(object):
                 for name in self.names_to_be_tested:
                     self.generate_image_from_text(name).show()
                     if self.save_images_path:
-                        self.generate_image_from_text(name).save(self.save_images_path + name + "_" + epoch + "png")
+                        self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
 
     def generate_image_from_text(self, text):
         encoded_text = np.zeros(shape=(1, self.biggest_sentence, self.vocab_size))
