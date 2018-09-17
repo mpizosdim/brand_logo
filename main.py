@@ -139,19 +139,25 @@ class DCGan(object):
         self.model.compile(loss='binary_crossentropy', optimizer=g_optim)
         print('generator-discriminator: ', self.model.summary())
 
-    def _plot_loss(self, lose_d, lose_g):
+    def _plot_loss(self, lose_d, lose_g, accuracy_d):
         epochs = np.arange(len(lose_d))
+        plt.figure(1)
+        plt.subplot(211)
         plt.plot(epochs, lose_d, 'r', epochs, lose_g, 'b')
         plt.xlabel("epochs")
         plt.ylabel("loss")
+        plt.subplot(212)
+        plt.plot(epochs, accuracy_d)
         plt.show()
 
     def fit(self, epochs, batch_size):
         d_losses_all = []
         g_losses_all = []
+        d_accuracy_all = []
         for epoch in range(epochs):
             d_losses = []
             g_losses = []
+            d_accuracies = []
             print("====" * 6)
             print("epoch is: %s" % epoch)
             batch_count = int(self.data.shape[0] / batch_size)
@@ -171,17 +177,20 @@ class DCGan(object):
 
                 generated_images = self.generator.predict(text_batch)
                 self.discriminator.trainable = True
-                d_loss = self.discriminator.train_on_batch([np.concatenate((image_batch, generated_images)), np.concatenate((text_batch, text_batch))], np.array([1] * batch_size + [0] * batch_size))
+                d_loss, d_accuracy = self.discriminator.train_on_batch([np.concatenate((image_batch, generated_images)), np.concatenate((text_batch, text_batch))], np.array([1] * batch_size + [0] * batch_size))
                 d_losses.append(d_loss)
                 self.discriminator.trainable = False
                 g_loss = self.model.train_on_batch(text_batch, np.array([1] * batch_size))
                 g_losses.append(g_loss)
+                d_accuracies.append(d_accuracy)
 
             d_losses_all.append(np.mean(d_losses))
             g_losses_all.append(np.mean(g_losses))
+            d_accuracy_all.append(np.mean(d_accuracies))
 
-            print("d_loss : %f" % np.mean(d_losses))
-            print("g_loss : %f" % np.mean(g_losses))
+            print("d_loss: %f" % np.mean(d_losses))
+            print("g_loss: %f" % np.mean(g_losses))
+            print("d_accuracy: %f" % np.mean(d_accuracies))
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
                     if epoch % 100 == 0:
@@ -189,7 +198,7 @@ class DCGan(object):
                         if self.save_images_path:
                             self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
 
-        self._plot_loss(d_losses_all, g_losses_all)
+        self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
 
     def generate_image_from_text(self, text):
         encoded_text = np.zeros(shape=(1, self.biggest_sentence, self.vocab_size))
