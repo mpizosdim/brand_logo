@@ -139,8 +139,8 @@ class DCGan(object):
             if epoch % output_image_every_n_epochs == 0:
                 for i in range(number_of_images):
                     self.generate_image().show()
-                if save_image_path:
-                    self.generate_image().save(save_image_path + "_" + str(i) +"_" + str(epoch) + ".png")
+                    if save_image_path:
+                        self.generate_image().save(save_image_path + "_" + str(i) +"_" + str(epoch) + ".png")
 
         self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
 
