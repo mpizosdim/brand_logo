@@ -137,19 +137,19 @@ class DCGan(object):
             print("d_accuracy: %f" % np.mean(d_accuracies))
 
             if epoch % output_image_every_n_epochs == 0:
-                self.generate_image(number_of_images).show()
+                for i in range(number_of_images):
+                    self.generate_image().show()
                 if save_image_path:
-                    self.generate_image(number_of_images).save(save_image_path + "_" + str(epoch) + ".png")
+                    self.generate_image().save(save_image_path + "_" + str(i) +"_" + str(epoch) + ".png")
 
         self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
 
-    def generate_image(self, number_of_images):
-        for _ in range(number_of_images):
-            noise_batch = np.random.uniform(-1.0, 1.0, size=[1, 100])
-            generated_images = self.generator.predict(noise_batch)
-            generated_image = generated_images[0]
-            generated_image = generated_image * 127.5 + 127.5
-            return Image.fromarray(generated_image.astype(np.uint8))
+    def generate_image(self):
+        noise_batch = np.random.uniform(-1.0, 1.0, size=[1, 100])
+        generated_images = self.generator.predict(noise_batch)
+        generated_image = generated_images[0]
+        generated_image = generated_image * 127.5 + 127.5
+        return Image.fromarray(generated_image.astype(np.uint8))
 
 
 if __name__ == '__main__':
