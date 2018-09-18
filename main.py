@@ -99,7 +99,7 @@ class DCGan(object):
         plt.plot(epochs, accuracy_d)
         plt.show()
 
-    def fit(self, epochs, batch_size):
+    def fit(self, epochs, batch_size, output_image_every_n_epochs=100, number_of_images=5):
         d_losses_all = []
         g_losses_all = []
         d_accuracy_all = []
@@ -137,14 +137,14 @@ class DCGan(object):
             print("g_loss: %f" % np.mean(g_losses))
             print("d_accuracy: %f" % np.mean(d_accuracies))
 
-            if epoch % 100 == 0:
-                self.generate_image().show()
+            if epoch % output_image_every_n_epochs == 0:
+                self.generate_image(number_of_images).show()
                 if self.save_images_path:
-                    self.generate_image().save(self.save_images_path + "_" + str(epoch) + ".png")
+                    self.generate_image(number_of_images).save(self.save_images_path + "_" + str(epoch) + ".png")
 
         self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
 
-    def generate_image(self, number_of_images=5):
+    def generate_image(self, number_of_images):
         for _ in range(number_of_images):
             noise_batch = np.random.uniform(-1.0, 1.0, size=[1, 100])
             generated_images = self.generator.predict(noise_batch)
@@ -160,4 +160,4 @@ if __name__ == '__main__':
     gan = DCGan()
     gan.preprocess("labeled_data/", img_width, img_height)
     gan.build_model()
-    gan.fit(epochs, batch_size)
+    gan.fit(epochs, batch_size, 100, 5)
