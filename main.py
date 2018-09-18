@@ -1,11 +1,9 @@
 from keras import backend as K
-from keras.layers import Input, Dense, LSTM, Reshape, concatenate
+from keras.layers import Input, Dense, Reshape
 from random import shuffle
 import numpy as np
 import os
 from keras.preprocessing.image import img_to_array, load_img
-from keras.preprocessing import sequence
-from keras.utils import to_categorical
 from keras.layers.core import Activation, Flatten
 from keras.layers.normalization import BatchNormalization
 from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
