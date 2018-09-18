@@ -142,11 +142,11 @@ class DCGan(object):
             if epoch % 100 == 0:
                 self.generate_image().show()
                 if self.save_images_path:
-                    self.generate_image_from_text().save(self.save_images_path + "_" + str(epoch) + ".png")
+                    self.generate_image().save(self.save_images_path + "_" + str(epoch) + ".png")
 
         self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
 
-    def generate_image_from_text(self, number_of_images=5):
+    def generate_image(self, number_of_images=5):
         for _ in range(number_of_images):
             noise_batch = np.random.uniform(-1.0, 1.0, size=[1, 100])
             generated_images = self.generator.predict(noise_batch)
