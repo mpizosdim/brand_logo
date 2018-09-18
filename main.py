@@ -23,7 +23,6 @@ class DCGan(object):
         self.generator = None
         self.discriminator = None
         self.model = None
-        self.save_images_path = None
 
     def preprocess(self, path_of_data, img_width, img_height):
         result = []
@@ -99,7 +98,7 @@ class DCGan(object):
         plt.plot(epochs, accuracy_d)
         plt.show()
 
-    def fit(self, epochs, batch_size, output_image_every_n_epochs=100, number_of_images=5):
+    def fit(self, epochs, batch_size, save_image_path=None, output_image_every_n_epochs=100, number_of_images=5):
         d_losses_all = []
         g_losses_all = []
         d_accuracy_all = []
@@ -139,8 +138,8 @@ class DCGan(object):
 
             if epoch % output_image_every_n_epochs == 0:
                 self.generate_image(number_of_images).show()
-                if self.save_images_path:
-                    self.generate_image(number_of_images).save(self.save_images_path + "_" + str(epoch) + ".png")
+                if save_image_path:
+                    self.generate_image(number_of_images).save(save_image_path + "_" + str(epoch) + ".png")
 
         self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
 
@@ -160,4 +159,5 @@ if __name__ == '__main__':
     gan = DCGan()
     gan.preprocess("labeled_data/", img_width, img_height)
     gan.build_model()
-    gan.fit(epochs, batch_size, 100, 5)
+    gan.fit(epochs, batch_size, None,100, 5)
+
