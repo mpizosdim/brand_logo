@@ -39,6 +39,7 @@ class DCGan(object):
         self.img_width = img_width
         self.img_channels = shape_of_image[2]
         self.data = data
+        print("number of data points: %s" % len(self.data))
         pass
 
     def _build_generator(self, init_img_width, init_img_height):
@@ -111,7 +112,6 @@ class DCGan(object):
             print("====" * 6)
             print("epoch is: %s" % epoch)
             batch_count = int(self.data.shape[0] / batch_size)
-            print("number of batches: %s" % batch_count)
             for batch_index in range(batch_count):
                 image_batch = self.data[batch_index * batch_size:(batch_index + 1) * batch_size]
                 image_batch = np.array(image_batch)
@@ -161,5 +161,7 @@ if __name__ == '__main__':
     gan = DCGan()
     gan.preprocess("labeled_data/", img_width, img_height)
     gan.build_model()
-    gan.fit(epochs, batch_size, None,100, 5)
+    gan.fit(epochs, batch_size, None, 100, 5)
 
+#TODO: split accuracy to real accuracy and fake accuracy.
+#TODO: add save function for the model.
