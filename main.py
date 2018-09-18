@@ -14,6 +14,7 @@ from keras.optimizers import SGD
 from PIL import Image
 import matplotlib.pyplot as plt
 
+
 class DCGan(object):
     def __init__(self):
         K.set_image_dim_ordering('tf')
@@ -78,7 +79,6 @@ class DCGan(object):
         self.names_to_be_tested = names_to_be_tested
 
     def _build_generator(self, input_layer_text, lstm_hidden_size, init_img_width, init_img_height):
-
         lstm_layer = LSTM(lstm_hidden_size)(input_layer_text)
         text_layer = Dense(1024)(lstm_layer)
 
