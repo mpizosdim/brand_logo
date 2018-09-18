@@ -28,6 +28,8 @@ class DCGan(object):
         result = []
         for file in os.listdir(path_of_data):
             logo = img_to_array(load_img(path_of_data + "/" + file, target_size=(img_height, img_width)))
+            if np.mean(logo) > 254:
+                continue
             logo_image = (logo.astype(np.float32) / 255) * 2 - 1
             result.append(logo_image)
         shape_of_image = list(set([x.shape for x in result]))[0]
