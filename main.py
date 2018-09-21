@@ -90,25 +90,39 @@ class DCGan(object):
         self.model.compile(loss='binary_crossentropy', optimizer=g_optim)
         print('GAN: ', self.model.summary())
 
-    def _plot_loss(self, lose_d, lose_g, accuracy_d):
+    def _plot_loss(self, lose_d, lose_g, accuracy_d, accuracy_fake, accuracy_real):
         epochs = np.arange(len(lose_d))
         plt.figure(1)
-        plt.subplot(211)
-        plt.plot(epochs, lose_d, 'r', epochs, lose_g, 'b')
+        plt.subplot(311)
+        plt.plot(epochs, lose_d, 'r', label="loss discriminator")
+        plt.plot(epochs, lose_g, 'b', label="loss generator")
+        plt.legend()
         plt.xlabel("epochs")
         plt.ylabel("loss")
-        plt.subplot(212)
+        plt.subplot(312)
         plt.plot(epochs, accuracy_d)
+        plt.xlabel("epochs")
+        plt.ylabel("loss accuracy overal")
+        plt.subplot(313)
+        plt.plot(epochs, accuracy_fake, 'r', label="accuracy fake")
+        plt.plot(epochs, accuracy_real, 'b', label="accuracy real")
+        plt.xlabel("epochs")
+        plt.ylabel("loss")
+        plt.legend()
         plt.show()
 
     def fit(self, epochs, batch_size, save_image_path=None, output_image_every_n_epochs=100, number_of_images=5):
         d_losses_all = []
         g_losses_all = []
         d_accuracy_all = []
+        d_accuracy_real_all = []
+        d_accuracy_fake_all = []
         for epoch in range(epochs):
             d_losses = []
             g_losses = []
             d_accuracies = []
+            d_accuracies_real = []
+            d_accuracies_fake = []
             print("====" * 6)
             print("epoch is: %s" % epoch)
             batch_count = int(self.data.shape[0] / batch_size)
@@ -122,6 +136,8 @@ class DCGan(object):
                 d_loss_fake, d_accuracy_fake = self.discriminator.train_on_batch(generated_images, np.array([0] * batch_size))
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
                 d_accuracy = 0.5 * np.add(d_accuracy_real, d_accuracy_fake)
+                d_accuracies_real.append(d_accuracy_real)
+                d_accuracies_fake.append(d_accuracy_fake)
                 d_losses.append(d_loss)
                 d_accuracies.append(d_accuracy)
 
@@ -133,10 +149,14 @@ class DCGan(object):
             d_losses_all.append(np.mean(d_losses))
             g_losses_all.append(np.mean(g_losses))
             d_accuracy_all.append(np.mean(d_accuracies))
+            d_accuracy_fake_all.append(np.mean(d_accuracies_fake))
+            d_accuracy_real_all.append(np.mean(d_accuracies_real))
 
             print("d_loss: %f" % np.mean(d_losses))
             print("g_loss: %f" % np.mean(g_losses))
             print("d_accuracy: %f" % np.mean(d_accuracies))
+            print("d_accuracy fake: %f" % np.mean(d_accuracies_fake))
+            print("d_accuracy real: %f" % np.mean(d_accuracies_real))
 
             if epoch % output_image_every_n_epochs == 0:
                 for i in range(number_of_images):
@@ -144,7 +164,7 @@ class DCGan(object):
                     if save_image_path:
                         self.generate_image().save(save_image_path + "_" + str(i) +"_" + str(epoch) + ".png")
 
-        self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
+        self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all, d_accuracy_fake_all, d_accuracy_real_all)
 
     def generate_image(self):
         noise_batch = np.random.uniform(-1.0, 1.0, size=[1, 100])
@@ -159,7 +179,7 @@ if __name__ == '__main__':
     batch_size = 32
     img_width, img_height = 160, 80
     gan = DCGan()
-    gan.preprocess("labeled_data/", img_width, img_height)
+    gan.preprocess("labeled_data_testing/", img_width, img_height)
     gan.build_model()
     gan.fit(epochs, batch_size, None, 100, 5)
 
