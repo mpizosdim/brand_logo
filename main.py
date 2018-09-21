@@ -42,12 +42,13 @@ class DCGan(object):
         biggest_sentence = 0
         all_chars = ''
         for file in os.listdir(path_of_data):
+            logo = img_to_array(load_img(path_of_data + "/" + file, target_size=(img_height, img_width)))
+            if np.mean(logo) > 254:
+                continue
             brand_text = file.replace('.png', '').lower().strip()
             all_chars = all_chars + brand_text
             if len(brand_text) > biggest_sentence:
                 biggest_sentence = len(brand_text)
-
-            logo = img_to_array(load_img(path_of_data + "/" + file, target_size=(img_height, img_width)))
             logo_image = (logo.astype(np.float32) / 255) * 2 - 1
             result.append([logo_image, brand_text])
 
@@ -139,25 +140,39 @@ class DCGan(object):
         self.model.compile(loss='binary_crossentropy', optimizer=g_optim)
         print('generator-discriminator: ', self.model.summary())
 
-    def _plot_loss(self, lose_d, lose_g, accuracy_d):
+    def _plot_loss(self, lose_d, lose_g, accuracy_d, accuracy_fake, accuracy_real):
         epochs = np.arange(len(lose_d))
         plt.figure(1)
-        plt.subplot(211)
-        plt.plot(epochs, lose_d, 'r', epochs, lose_g, 'b')
+        plt.subplot(311)
+        plt.plot(epochs, lose_d, 'r', label="loss discriminator")
+        plt.plot(epochs, lose_g, 'b', label="loss generator")
+        plt.legend()
         plt.xlabel("epochs")
         plt.ylabel("loss")
-        plt.subplot(212)
+        plt.subplot(312)
         plt.plot(epochs, accuracy_d)
+        plt.xlabel("epochs")
+        plt.ylabel("loss accuracy overal")
+        plt.subplot(313)
+        plt.plot(epochs, accuracy_fake, 'r', label="accuracy fake")
+        plt.plot(epochs, accuracy_real, 'b', label="accuracy real")
+        plt.xlabel("epochs")
+        plt.ylabel("loss")
+        plt.legend()
         plt.show()
 
     def fit(self, epochs, batch_size):
         d_losses_all = []
         g_losses_all = []
         d_accuracy_all = []
+        d_accuracy_real_all = []
+        d_accuracy_fake_all = []
         for epoch in range(epochs):
             d_losses = []
             g_losses = []
             d_accuracies = []
+            d_accuracies_real = []
+            d_accuracies_fake = []
             print("====" * 6)
             print("epoch is: %s" % epoch)
             batch_count = int(self.data.shape[0] / batch_size)
@@ -181,6 +196,8 @@ class DCGan(object):
                 d_loss_fake, d_accuracy_fake = self.discriminator.train_on_batch([generated_images, text_batch], np.array([0] * batch_size))
                 d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
                 d_accuracy = 0.5 * np.add(d_accuracy_real, d_accuracy_fake)
+                d_accuracies_real.append(d_accuracy_real)
+                d_accuracies_fake.append(d_accuracy_fake)
                 d_losses.append(d_loss)
                 d_accuracies.append(d_accuracy)
 
@@ -191,10 +208,14 @@ class DCGan(object):
             d_losses_all.append(np.mean(d_losses))
             g_losses_all.append(np.mean(g_losses))
             d_accuracy_all.append(np.mean(d_accuracies))
+            d_accuracy_fake_all.append(np.mean(d_accuracies_fake))
+            d_accuracy_real_all.append(np.mean(d_accuracies_real))
 
             print("d_loss: %f" % np.mean(d_losses))
             print("g_loss: %f" % np.mean(g_losses))
             print("d_accuracy: %f" % np.mean(d_accuracies))
+            print("d_accuracy fake: %f" % np.mean(d_accuracies_fake))
+            print("d_accuracy real: %f" % np.mean(d_accuracies_real))
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
                     if epoch % 100 == 0:
@@ -202,7 +223,7 @@ class DCGan(object):
                         if self.save_images_path:
                             self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
 
-        self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all)
+        self._plot_loss(d_losses_all, g_losses_all, d_accuracy_all, d_accuracy_fake_all, d_accuracy_real_all)
 
     def generate_image_from_text(self, text):
         encoded_text = np.zeros(shape=(1, self.biggest_sentence, self.vocab_size))
@@ -216,10 +237,10 @@ class DCGan(object):
 
 if __name__ == '__main__':
     epochs = 2
-    batch_size = 32
+    batch_size = 16
     img_width, img_height = 160, 80
     gan = DCGan()
-    gan.preprocess("labeled_data/", img_width, img_height)
+    gan.preprocess("labeled_data_testing/", img_width, img_height)
     gan.build_model()
     gan.set_testing_data(["prada", "ajk", "carrel", "mun"], "test_folder/")
     gan.fit(epochs, batch_size)
