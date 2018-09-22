@@ -27,7 +27,10 @@ class DCGan(object):
     def preprocess(self, path_of_data, img_width, img_height):
         result = []
         for file in os.listdir(path_of_data):
-            logo = img_to_array(load_img(path_of_data + "/" + file, target_size=(img_height, img_width)))
+            try:
+                logo = img_to_array(load_img(path_of_data + "/" + file, target_size=(img_height, img_width)))
+            except:
+                continue
             if np.mean(logo) > 254:
                 continue
             logo_image = (logo.astype(np.float32) / 255) * 2 - 1
