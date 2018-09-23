@@ -30,6 +30,7 @@ class DCGan(object):
         self.model = None
         self.names_to_be_tested = None
         self.save_images_path = None
+        self.output_image_every_n_epochs = None
 
     @staticmethod
     def _word2ind_padded(word, dictionary, max_pad, vocab_size):
@@ -74,10 +75,11 @@ class DCGan(object):
         self.biggest_sentence = biggest_sentence
         pass
 
-    def set_testing_data(self, names_to_be_tested, save_images_path=None):
+    def set_testing_data(self, names_to_be_tested, save_images_path=None, output_image_every_n_epochs=100):
         if save_images_path:
             self.save_images_path = save_images_path
         self.names_to_be_tested = names_to_be_tested
+        self.output_image_every_n_epochs = output_image_every_n_epochs
 
     def _build_generator(self, input_layer_text, lstm_hidden_size, init_img_width, init_img_height):
         lstm_layer = LSTM(lstm_hidden_size)(input_layer_text)
@@ -218,7 +220,7 @@ class DCGan(object):
             print("d_accuracy real: %f" % np.mean(d_accuracies_real))
             if self.names_to_be_tested:
                 for name in self.names_to_be_tested:
-                    if epoch % 100 == 0:
+                    if epoch % self.output_image_every_n_epochs == 0:
                         self.generate_image_from_text(name).show()
                         if self.save_images_path:
                             self.generate_image_from_text(name).save(self.save_images_path + name + "_" + str(epoch) + ".png")
